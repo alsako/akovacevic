@@ -6,13 +6,13 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AlertService } from '../../services/alert.service';
-import { AlertComponent } from '../shared/alert/alert.component';
 import { PaginationComponent } from '../shared/pagination/pagination.component';
+import {ButtonComponent} from '../shared/button/button.component';
 
 @Component({
   selector: 'app-employees',
   standalone: true,
-  imports: [CommonModule, FormsModule, AlertComponent, PaginationComponent],
+  imports: [CommonModule, FormsModule, PaginationComponent, ButtonComponent],
   templateUrl: './employees.component.html',
   styleUrls: ['./employees.component.css']
 })
@@ -31,6 +31,7 @@ export class EmployeesComponent implements OnInit {
 
   currentPage: number = 1;
   pageSize: number = 10;
+  active: boolean = true;
 
   get isAdmin(): boolean {
     return this.authService.isAdmin();
@@ -44,6 +45,7 @@ export class EmployeesComponent implements OnInit {
     this.loadEmployees();
   }
 
+  currentUserId = this.authService.getUserId();
   loadEmployees(): void {
     this.employeeService.getEmployees(0, 100).subscribe({
       next: (response) => {
@@ -102,24 +104,42 @@ export class EmployeesComponent implements OnInit {
     this.router.navigate(['/register-employee']);
   }
 
-  deactivateEmployee(id: number): void {
+  deactivateEmployee(id: number, isActive: undefined | boolean): void {
     if (!this.isAdmin) {
-      this.alertService.showAlert("error", "You are not authorized to deactivate employees.");
+      this.alertService.showAlert("error", "You are not authorized to change employee status.");
       return;
     }
 
-    this.employeeService.deactivateEmployee(id).subscribe({
-      next: () => {
-        const employee = this.employees.find(emp => emp.id === id);
-        if (employee) {
-          employee.active = false;
+    if (isActive) {
+      // Deactivate employee
+      this.employeeService.deactivateEmployee(id).subscribe({
+        next: () => {
+          this.updateEmployeeStatus(id, false); // Update UI immediately
+          this.alertService.showAlert("success", "Employee deactivated successfully.");
+        },
+        error: () => {
+          this.alertService.showAlert('error', 'Failed to deactivate employee. Please try again.');
         }
-        this.alertService.showAlert("success", "Employee deactivated successfully.");
-      },
-      error: () => {
-        this.alertService.showAlert('error', 'Failed to deactivate employee. Please try again.');
-      }
-    });
+      });
+    } else {
+      // Activate employee
+      this.employeeService.activateEmployee(id).subscribe({
+        next: () => {
+          this.updateEmployeeStatus(id, true); // Update UI immediately
+          this.alertService.showAlert("success", "Employee activated successfully.");
+        },
+        error: () => {
+          this.alertService.showAlert('error', 'Failed to activate employee. Please try again.');
+        }
+      });
+    }
+  }
+
+  private updateEmployeeStatus(id: number, isActive: boolean): void {
+    const employee = this.employees.find(emp => emp.id === id);
+    if (employee) {
+      employee.active = isActive;
+    }
   }
 
   viewEmployeeDetails(id: number): void {

@@ -4,11 +4,12 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
 import { Subscription } from 'rxjs';
 import { ModalComponent } from '../modal/modal.component';
+import {ButtonComponent} from '../button/button.component';
 
 @Component({
   selector: 'app-aside',
   standalone: true,
-  imports: [NgClass, NgIf, ModalComponent, RouterLink],
+  imports: [NgClass, NgIf, ModalComponent, RouterLink, ButtonComponent],
   templateUrl: './aside.component.html',
   styleUrl: './aside.component.css'
 })
@@ -53,20 +54,9 @@ export class AsideComponent implements OnInit, OnDestroy {
     this.isModalOpen = true;
   }
 
-  closeModal() {
-    this.isModalOpen = false;
-  }
-
-  openAccountModal() {
-    this.isAccountModalOpen = true;
-  }
-
-  closeAccountModal() {
-    this.isAccountModalOpen = false;
-  }
-
   navigateTo(route: string) {
-    this.router.navigate([route]);
+    this.isModalOpen = false;
+    this.router.navigate([route]).then(r => {});
   }
 
   goToClientPortalOrUserDetail() {
@@ -81,12 +71,12 @@ export class AsideComponent implements OnInit, OnDestroy {
     this.navigateTo(`/account-management`);
   }
 
-  goToPaymentsOrEmployees(){
-    if (this.isClient) {
-      this.openModal()
-    } else {
-      this.navigateTo('/employees');
-    }
+  goToPayments() {
+    this.openModal()
+  }
+
+  goToEmployees(){
+    this.navigateTo('/employees');
   }
 
   goToExchangeRate() {
@@ -97,8 +87,15 @@ export class AsideComponent implements OnInit, OnDestroy {
     if (this.isClient) {
       this.navigateTo(`/loan-management/${this.userId}`);
     } else {
-      this.navigateTo('/loan-management'); // todo
+      this.navigateTo('/loan-requests');
     }
+  }
 
+  goToSecures() {
+    this.navigateTo('/my-portfolio');
+  }
+
+  goToBankAccounts() {
+    this.navigateTo('/bank-accounts');
   }
 }

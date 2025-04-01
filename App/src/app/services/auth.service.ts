@@ -96,6 +96,18 @@ export class AuthService {
     return this.getUserPermissions().includes('CLIENT');
   }
 
+  isAgent(): boolean {
+    return this.getUserPermissions().includes('AGENT');
+  }
+
+  isSupervisor(): boolean {
+    return this.getUserPermissions().includes('SUPERVISOR');
+  }
+
+  isActuary(): boolean {
+    return this.isAgent() || this.isSupervisor();
+  }
+
   requestPasswordReset(email: string): Observable<void> {
     return this.http.post<void>(`${this.baseUrl}/request-password-reset`, { email });
   }

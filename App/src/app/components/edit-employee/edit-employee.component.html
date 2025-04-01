@@ -1,62 +1,71 @@
-<div class="edit-main ">
-  <div class="edit-container ">
-<h2>Edit Employee</h2>
-
-  <app-alert></app-alert>
-
+<div class="edit-container">
+  <h2>Edit Employee</h2>
+  <br>
   <div *ngIf="loading" class="loading">Loading employee...</div>
 
-  <form *ngIf="employee" [formGroup]="editForm" (ngSubmit)="saveChanges()">
-
-    <div class="flex text-left gap-1">
-      <input-text formControlName="firstName" [disabled]="true" placeholder="First Name" label="First Name"
+  <form *ngIf="employee && !loading" [formGroup]="editForm" (ngSubmit)="saveChanges()">
+    <div class="flex gap-1">
+      <input-text class="flex-1" formControlName="firstName" placeholder="First Name" label="First Name"
+                  [disabledInput]="true"
                   [validationRules]="[validations.required, validations.onlyLetters(), validations.minLengthWithoutSpaces(2)]"/>
-      <input-text formControlName="lastName" placeholder="Last Name" label="Last Name"
+      <input-text class="flex-1" formControlName="lastName" placeholder="Last Name" label="Last Name"
                   [validationRules]="[validations.required, validations.onlyLetters(), validations.minLengthWithoutSpaces(2)]"/>
     </div>
 
-
-    <div class="flex text-left gap-1">
-      <input-text [disabled]="true" formControlName="jmbg" placeholder="JMBG" label="JMBG"
-                  [validationRules]="[validations.required, validations.isValidJMBG()]"/>
-      <input-text [disabled]="true" formControlName="email" placeholder="Email" label="Email" type="email"
+    <div class="text-left">
+      <input-text formControlName="email" placeholder="Email" label="Email" type="email" [disabledInput]="true"
                   [validationRules]="[validations.required, validations.isEmail]"/>
     </div>
-
-    <div class="flex text-left gap-1">
-      <input-text [disabled]="true" formControlName="birthDate" type="date" placeholder="Date of Birth"
-                  label="Date of Birth"
-                  [validationRules]="[validations.required, validations.pastDate()]"/>
-      <app-select label="Gender" formControlName="gender">
-        <option value="" disabled selected>Select gender</option>
-        <option value="M">Male</option>
-        <option value="F">Female</option>
-      </app-select>
+    <div class="text-left">
+      <input-text formControlName="jmbg" placeholder="JMBG" label="JMBG" [disabledInput]="true"
+                  [validationRules]="[validations.required, validations.isValidJMBG()]"/>
     </div>
-    <div class="flex text-left gap-1">
+
+    <div>
       <input-text formControlName="phone" placeholder="Phone Number" label="Phone Number"
                   [validationRules]="[validations.required, validations.isValidPhone()]"/>
+    </div>
+
+    <div class="text-left">
       <input-text formControlName="address" placeholder="Address" label="Address"
                   [validationRules]="[validations.required, validations.minLengthWithoutSpaces(5)]"/>
     </div>
 
-
-    <div class="flex" style="width: 100%;text-align: left;gap: 1rem;">
-      <input-text formControlName="position" placeholder="Position" label="Position"
+    <div class="flex gap-1">
+      <input-text class="flex-1" formControlName="position" placeholder="Position" label="Position"
                   [validationRules]="[validations.required, validations.onlyLetters(), validations.minLengthWithoutSpaces(3)]"/>
-      <input-text formControlName="department" placeholder="Department" label="Department"
+      <input-text class="flex-1" formControlName="department" placeholder="Department" label="Department"
                   [validationRules]="[validations.required, validations.minLengthWithoutSpaces(2)]"/>
     </div>
 
-    <app-button type="submit" [disabled]="loading" label="Save Changes"/>
+    <div class="flex gap-1">
+      <div class="flex-1">
 
-    <div *ngIf="isAdmin" class="admin-toggle">
-      <label>Admin Privileges</label>
-      <button type="button" (click)="toggleAdminStatus()" [disabled]="updatingAdminStatus">
-        {{ employee.role.includes('ADMIN') ? 'Revoke Admin' : 'Make Admin' }}
-      </button>
+        <label class="mb-05">Gender</label>
+        <select class="flex-1" formControlName="gender">
+          <option value="" disabled selected>Select gender</option>
+          <option value="M">Male</option>
+          <option value="F">Female</option>
+        </select>
+      </div>
+      <input-text class="flex-1" formControlName="birthDate" type="date" placeholder="Date of Birth"
+                  label="Date of Birth" [disabledInput]="true"
+                  [validationRules]="[validations.required, validations.pastDate()]"/>
+
+    </div>
+
+    <!-- New Role Dropdown -->
+    <div class="form-row text-left" *ngIf="isAdmin">
+      <label class="mb-05">Role</label>
+      <select class="flex-1" formControlName="role">
+        <option value="" disabled selected>Select Role</option>
+        <option *ngFor="let role of roles" [value]="role" [selected]="employee.role.includes(role)">{{ role }}</option>
+      </select>
+    </div>
+
+    <div class="flex gap-1 width-fit">
+      <app-button type="submit" [disabled]="loading">Save Changes</app-button>
+      <app-button type="back-button">Cancel</app-button>
     </div>
   </form>
-
-  </div>
 </div>

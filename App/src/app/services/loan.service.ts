@@ -3,6 +3,7 @@ import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { AuthService } from './auth.service';
 import { Loan } from '../models/loan-dto.model';
+import {Installment} from '../models/installment-model';
 
 @Injectable({
   providedIn: 'root',
@@ -22,7 +23,7 @@ export class LoanService {
 
   // Get all loans for a specific client
   getClientLoans(
-    clientId: string
+    clientId: string | number
   ): Observable<{ content: Loan[]; totalElements: number }> {
     return this.http.get<{ content: Loan[]; totalElements: number }>(
       `${this.apiUrl}`,
@@ -31,10 +32,23 @@ export class LoanService {
   }
 
   // Get a specific loan by ID
-  getLoan(loanId: number): Observable<any> {
+  getLoan(loanId: number | undefined): Observable<any> {
     return this.http.get(`${this.apiUrl}/${loanId}`, {
       headers: this.getAuthHeaders(),
     });
+  }
+
+  getLoanInstallments(loanId: number | undefined): Observable<Installment[]> {
+    return this.http.get<Installment[]>(`${this.apiUrl}/${loanId}/installments`, {
+      headers: this.getAuthHeaders(),
+    });
+  }
+
+  getAllLoans(): Observable<{ content: Loan[]; totalElements: number }> {
+    return this.http.get<{ content: Loan[]; totalElements: number }>(
+      `${this.apiUrl}/all`,
+      { headers: this.getAuthHeaders() }
+    );
   }
 
   // Apply for a new loan

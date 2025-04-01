@@ -6,6 +6,7 @@ import { PaymentOverviewDto } from '../models/payment-overview-dto';
 import { PaymentDetailsDto } from '../models/payment-details-dto';
 import { CreatePaymentDto } from '../models/create-payment-dto';
 import { AuthService } from './auth.service';
+import {TransferDto} from '../models/transfer.model';
 
 @Injectable({
   providedIn: 'root',
@@ -49,8 +50,13 @@ export class PaymentService {
       .set('page', page.toString())
       .set('size', size.toString());
 
-    if (startDate) params = params.set('startDate', startDate);
-    if (endDate) params = params.set('endDate', endDate);
+    if (startDate) {
+      params = params.set('startDate', `${startDate}T00:00:00`);
+    }
+    if (endDate) {
+      params = params.set('endDate', `${endDate}T23:59:59`);
+    }
+
     if (minAmount) params = params.set('minAmount', minAmount.toString());
     if (maxAmount) params = params.set('maxAmount', maxAmount.toString());
     if (paymentStatus) params = params.set('paymentStatus', paymentStatus);
@@ -61,6 +67,19 @@ export class PaymentService {
       headers: this.getAuthHeaders(), //.set('Accept', '*/*')
       params
     }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  transfer(transferDto: TransferDto): Observable<string> {
+    return this.http.post(
+      `${this.baseUrl}/transfer`,
+      transferDto,
+      {
+        headers: this.getAuthHeaders(),
+        responseType: 'text'
+      }
+    ).pipe(
       catchError(this.handleError)
     );
   }
@@ -88,15 +107,23 @@ export class PaymentService {
   }
 
   private handleError(error: any): Observable<never> {
-    let errorMessage = 'Something went wrong :(';
+    let errorMessage = 'Unknown error occurred';
+
     if (error.error instanceof ErrorEvent) {
       // Client-side error
       errorMessage = `Error: ${error.error.message}`;
     } else {
       // Server-side error
-      errorMessage = `Error Code: ${error.status}\nMessage: ${error.message}`;
+      errorMessage = error.error || error.message || `Server returned code ${error.status}`;
+
+      if (errorMessage.startsWith('Currency mismatch')) {
+        errorMessage = errorMessage.replace('Currency mismatch: ', '');
+      }
+      if (errorMessage.startsWith('Insufficient funds')) {
+        errorMessage = errorMessage.replace('Insufficient funds: ', '');
+      }
     }
-    console.error(errorMessage);
+    console.error('PaymentService error:', error);
     return throwError(() => new Error(errorMessage));
   }
 }
