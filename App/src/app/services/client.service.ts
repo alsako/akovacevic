@@ -3,13 +3,13 @@ import { User } from '../models/user.model';
 import { Observable } from 'rxjs';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { AuthService } from './auth.service';
-import {Employee} from '../models/employee.model';
+import {environment} from '../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ClientService {
-  private apiUrl = 'http://localhost:8080/api/admin/clients';
+  private apiUrl = `${environment.userUrl}/api/admin/clients`;
 
   constructor(private http: HttpClient, private authService: AuthService) {}
 
@@ -34,8 +34,8 @@ export class ClientService {
     return this.http.get<User>(`${this.apiUrl}/${id}`, { headers: this.getAuthHeaders() });
   }
 
-  getUserSelf(): Observable<Employee> {
-    return this.http.get<Employee>(`${this.apiUrl}/me`, { headers: this.getAuthHeaders() });
+  getUserSelf(): Observable<User> {
+    return this.http.get<User>(`${this.apiUrl}/me`, { headers: this.getAuthHeaders() });
   }
 
   registerUser(user: any): Observable<User> {

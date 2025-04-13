@@ -1,14 +1,15 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import {delay, Observable, of} from 'rxjs';
+import { Observable } from 'rxjs';
 import { AuthService } from './auth.service';
 import { Company, CreateCompany } from '../models/company.model';
+import {environment} from '../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class CompanyService {
-  private apiUrl = 'http://localhost:8080/api/company';
+  private apiUrl = `${environment.userUrl}/api/company`;
 
   constructor(private http: HttpClient, private authService: AuthService) {}
 
@@ -26,11 +27,6 @@ export class CompanyService {
     });
   }
 
-  getCompanyById(id: number): Observable<Company> {
-    return this.http.get<Company>(`${this.apiUrl}/${id}`, {
-      headers: this.getAuthHeaders()
-    });
-  }
   getCompaniesByClientId(clientId: number): Observable<Company[]> {
     return this.http.get<Company[]>(`${this.apiUrl}/owned-by/${clientId}`, {
       headers: this.getAuthHeaders()

@@ -1,20 +1,22 @@
+// TODO duplicate
 export interface Order {
   id: number;
-  agent: string;
+  clientName: string;
   asset: string;
   orderType: string;
   quantity: number;
   contractSize: number;
   pricePerUnit: number | null;
   direction: 'BUY' | 'SELL';
-  status: string;
+  status: 'PENDING' | 'APPROVED' | 'DENIED' | 'DONE';
   approvedBy: string | null;
-  isDone: boolean;          
-  lastModification: string; 
+  isDone: boolean;
+  lastModification: string;
   orderDate: string;
   remainingPortions: number;
-  afterHours: boolean;      
+  afterHours: boolean;
   isTimeLimited: boolean;
+  accountNumber: string;
 }
 
 export interface PageResponse<T> {

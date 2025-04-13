@@ -1,4 +1,3 @@
-// Modify file: src/app/models/create-order.dto.ts
 export interface CreateOrderDto {
   listingId: number;
   orderType: string;
@@ -7,7 +6,7 @@ export interface CreateOrderDto {
   stopValue?: number | null;
   allOrNone: boolean;
   margin: boolean;
-  orderDirection: 'BUY' | 'SELL'; // <--- RENAME THIS FIELD
+  orderDirection: 'BUY' | 'SELL';
   contractSize: number;
   accountNumber: string;
 }

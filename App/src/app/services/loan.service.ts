@@ -1,15 +1,16 @@
-import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { AuthService } from './auth.service';
 import { Loan } from '../models/loan-dto.model';
-import {Installment} from '../models/installment-model';
+import { Installment } from '../models/installment-model';
+import {environment} from '../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class LoanService {
-  private apiUrl = 'http://localhost:8082/api/loans';
+  private apiUrl = `${environment.bankUrl}/api/loans`;
 
   constructor(private http: HttpClient, private authService: AuthService) {}
 
@@ -51,35 +52,6 @@ export class LoanService {
     );
   }
 
-  // Apply for a new loan
-  applyForLoan(loanApplication: any): Observable<any> {
-    return this.http.post(this.apiUrl, loanApplication, {
-      headers: this.getAuthHeaders(),
-    });
-  }
-
-  // Approve a loan application (for employees/admins)
-  approveLoan(loanId: string): Observable<any> {
-    return this.http.put(
-      `${this.apiUrl}/${loanId}/approve`,
-      {},
-      {
-        headers: this.getAuthHeaders(),
-      }
-    );
-  }
-
-  // Reject a loan application (for employees/admins)
-  rejectLoan(loanId: string, reason: string): Observable<any> {
-    return this.http.put(
-      `${this.apiUrl}/${loanId}/reject`,
-      { reason },
-      {
-        headers: this.getAuthHeaders(),
-      }
-    );
-  }
-
   // Get loan payment history
   getLoanPayments(loanId: string): Observable<any> {
     return this.http.get(`${this.apiUrl}/${loanId}/payments`, {
@@ -94,20 +66,4 @@ export class LoanService {
     });
   }
 
-  // Calculate loan details (interest, monthly payments, etc.)
-  calculateLoan(
-    amount: number,
-    term: number,
-    interestRate: number
-  ): Observable<any> {
-    const params = new HttpParams()
-      .set('amount', amount.toString())
-      .set('term', term.toString())
-      .set('interestRate', interestRate.toString());
-
-    return this.http.get(`${this.apiUrl}/calculate`, {
-      headers: this.getAuthHeaders(),
-      params,
-    });
-  }
 }

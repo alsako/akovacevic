@@ -39,7 +39,7 @@ export class OrderCreationModalComponent implements OnInit, OnChanges {
   @Input() direction: 'BUY' | 'SELL' = 'BUY';
   @Input() securityTicker: string = '';
   @Input() securityPrice: number = 0;
-  @Input() contractSize: number = 1; 
+  @Input() contractSize: number = 1;
   @Input() listingId: number | null = null;
   @Output() closeModalEvent = new EventEmitter<void>();
   @Output() createOrderEvent = new EventEmitter<any>();
@@ -81,7 +81,7 @@ export class OrderCreationModalComponent implements OnInit, OnChanges {
 
     if (changes['isOpen']) {
       if (this.isOpen) {
-        this.initializeModal(); 
+        this.initializeModal();
         needsUpdate = true;
       } else {
         this.resetForm();
@@ -90,7 +90,7 @@ export class OrderCreationModalComponent implements OnInit, OnChanges {
     if (changes['direction'] && this.isOpen) {
        this.currentView = ModalView.FORM;
        needsUpdate = true;
-       directionChanged = true; 
+       directionChanged = true;
     }
 
     if ((changes['securityPrice'] || changes['contractSize'] || changes['listingId']) && this.isOpen) {
@@ -98,8 +98,8 @@ export class OrderCreationModalComponent implements OnInit, OnChanges {
     }
 
 
-    if (this.isOpen && (directionChanged || changes['isOpen']?.currentValue === true)) {
-        this.loadUserAccounts(); 
+    if (this.isOpen){ // && (directionChanged || changes['isOpen']?.currentValue === true)) {
+        this.loadUserAccounts();
     }
 
     if (needsUpdate) {
@@ -115,10 +115,10 @@ export class OrderCreationModalComponent implements OnInit, OnChanges {
   loadUserAccounts(): void {
     this.isLoadingAccounts = true;
     this.accounts = [];
-    this.fetchedAccountsList = []; 
-    this.selectedAccountId = null; 
+    this.fetchedAccountsList = [];
+    this.selectedAccountId = null;
 
-    this.accountService.getMyAccountsRegular().subscribe({
+    this.accountService.getAccountsForOrder().subscribe({
       next: (response: any) => {
          this.fetchedAccountsList = Array.isArray(response) ? response : response?.content || [];
          this.accounts = this.fetchedAccountsList.map((acc: AccountResponse) => ({
@@ -193,7 +193,7 @@ export class OrderCreationModalComponent implements OnInit, OnChanges {
       this.alertService.showAlert('error', "Quantity must be positive.");
       return;
     }
-    if (!this.selectedAccountId && this.direction === 'BUY') {
+    if (!this.selectedAccountId) {
        this.alertService.showAlert('error', "Please select a source account for the purchase.");
        return;
     }
@@ -229,12 +229,7 @@ export class OrderCreationModalComponent implements OnInit, OnChanges {
         return;
     }
 
-    let accountNumberToSend: string | null = null;
-    if (this.direction === 'BUY') {
-        accountNumberToSend = this.selectedAccountId;
-    } else {
-        accountNumberToSend = this.fetchedAccountsList.length > 0 ? this.fetchedAccountsList[0].accountNumber : null;
-    }
+    let accountNumberToSend: string | null = this.selectedAccountId;
 
     if (!accountNumberToSend) {
         this.alertService.showAlert('error', `Cannot confirm order: Required account number is missing for ${this.direction} operation.`);
@@ -251,7 +246,7 @@ export class OrderCreationModalComponent implements OnInit, OnChanges {
       stopValue: this.stopPrice,
       allOrNone: this.allOrNone,
       margin: this.margin,
-      orderDirection: this.direction, 
+      orderDirection: this.direction,
       contractSize: this.contractSize,
       accountNumber: accountNumberToSend,
     };
@@ -271,7 +266,6 @@ export class OrderCreationModalComponent implements OnInit, OnChanges {
     });
   }
 
-
   get modalTitle(): string {
     if (this.currentView === ModalView.CONFIRMATION) {
         return `${this.direction === 'BUY' ? 'Purchase' : 'Sale'} Overview`;
@@ -280,7 +274,7 @@ export class OrderCreationModalComponent implements OnInit, OnChanges {
   }
 
   get selectedAccountLabel(): string {
-      if (this.direction === 'BUY' && this.selectedAccountId) {
+      if (this.selectedAccountId) {
           const account = this.accounts.find(acc => acc.value === this.selectedAccountId);
           return account ? account.label : 'N/A';
       }

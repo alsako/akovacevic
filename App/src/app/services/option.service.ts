@@ -1,27 +1,27 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, forkJoin, of } from 'rxjs';
-import { map, catchError } from 'rxjs/operators';
-import {
-  Option,
-  OptionType,
-  Stock,
-  Exchange,
-  OptionChain,
-  OptionPair,
-} from '../models/option.model';
+import { Observable, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
+import { Option } from '../models/option.model';
 import { AuthService } from './auth.service';
+import {environment} from '../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class OptionService {
-  private apiUrl = 'http://localhost:8083/api/listings';
+  private apiUrl = `${environment.stockUrl}/api/listings`;
 
   constructor(private http: HttpClient, private authService: AuthService) {}
 
   private getAuthHeaders(): HttpHeaders {
     const token = this.authService.getToken();
+    if (!token) {
+      console.error("Authentication token is missing.");
+      return new HttpHeaders({
+        'Content-Type': 'application/json'
+      });
+    }
     return new HttpHeaders({
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
@@ -30,14 +30,15 @@ export class OptionService {
 
   getStockOptionsByDate(stockId: number, date: Date): Observable<Option[]> {
     const formattedDate = this.formatDateToYYYYMMDD(date);
+    const url = `${this.apiUrl}/${stockId}/options/${formattedDate}`;
     return this.http
-      .get<Option[]>(`${this.apiUrl}/${stockId}/options/${formattedDate}`, {
+      .get<Option[]>(url, {
         headers: this.getAuthHeaders(),
       })
       .pipe(
         catchError((error) => {
           console.error(
-            `Error fetching options for date ${formattedDate}:`,
+            `Error fetching options for stock ${stockId} and date ${formattedDate}:`,
             error
           );
           return of([]);

@@ -1,0 +1,239 @@
+<div class="card width-50 flex-col gap-1">
+  <h2>Create New {{ accountForm.get('accountType')?.value | titlecase }} Account</h2>
+  <form [formGroup]="accountForm" (ngSubmit)="onSubmit()">
+
+    <div class="flex-col gap-1">
+      <div class="flex gap-1">
+        <div class="flex-col gap-1 width-50">
+          <!-- Clients -->
+          <label>Client:</label>
+          <select id="clientId" formControlName="clientId" (change)="onClientChange()">
+            <option value="0" disabled>Client...</option>
+            <option *ngFor="let user of users" [value]="user.id">
+              {{ user.firstName }} {{ user.lastName }} ({{ user.email }})
+            </option>
+          </select>
+          <div>
+            <app-button (click)="navigateToRegisterUser()" class="create-user-link">
+              Create New User
+            </app-button>
+          </div>
+
+          <label>Account Type:</label>
+          <select id="accountType" formControlName="accountType"> <!--[disabled] = true-->
+            <option value="CURRENT">CURRENT</option>
+          </select>
+
+          <!-- Monthly Fee -->
+          <input-text *ngIf="isCurrentAccount" label="Monthly Fee:" placeholder="Monthly Fee" id="monthlyFee"
+                      formControlName="monthlyFee" type="number"
+                      [formControlComp]="accountForm.controls['monthlyFee']"
+                      [errorMessages]="{ pattern: 'Must be a valid number (decimal allowed).' }">
+          </input-text>
+
+          <!-- Employee info -->
+          <div class="info-card">
+            <h3>Account Created By</h3>
+            <div *ngIf="loggedInEmployee">
+              <p><strong>Name:</strong> {{ loggedInEmployee.firstName }} {{ loggedInEmployee.lastName }}</p>
+              <p><strong>Position:</strong> {{ loggedInEmployee.position }}</p>
+            </div>
+            <div *ngIf="!loggedInEmployee">
+              <div *ngIf="isCurrAdmin">
+                <p>Admin creating account...</p>
+              </div>
+              <div *ngIf="!isCurrAdmin">
+                <p>Loading employee details...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex-col gap-1 width-50">
+          <label>Account Owner Type:</label>
+          <select id="accountOwnerType" formControlName="accountOwnerType" (change)="onAccountOwnerTypeChange()">
+            <option value="PERSONAL">PERSONAL</option>
+            <option value="COMPANY">COMPANY</option>
+          </select>
+
+          <!-- Company Dropdown (Conditional) -->
+          <div class="flex-col info-card" *ngIf="isCompanyAccount">
+            <h3>Company Information</h3>
+
+            <p *ngIf="!accountForm.get('clientId')?.value" class="info-message">
+              Please select a client first to manage companies.
+            </p>
+            <br *ngIf="accountForm.get('clientId')?.value" />
+
+            <div *ngIf="accountForm.get('clientId')?.value" class="flex-col gap-1">
+              <label>Select Company:</label>
+              <select formControlName="selectedCompany" id="selectedCompany" (change)="onCompanySelect()"> <!-- [disabled]="loadingCompanies" -->
+                <option [value]="null" disabled>Select a company</option>
+                <option [value]="-1">Create New Company</option>
+                <option *ngFor="let company of companies" [value]="company.id">
+                  {{ company.name }} ({{ company.registrationNumber }})
+                </option>
+              </select>
+              <div *ngIf="loadingCompanies" class="loading-message">Loading companies...</div>
+              <label>Authorized Personnel (Optional):</label>
+              <select formControlName="selectedAuthorizedPersonnel" id="authorizedPersonnel" (change)="onPersonnelSelect()">
+                <option [value]="null">Select authorized personnel</option>
+                <option [value]="-1">Create new authorized personnel</option>
+                <option *ngFor="let personnel of availablePersonnel" [value]="personnel.id">
+                  {{ personnel.firstName }} {{ personnel.lastName }}
+                </option>
+              </select>
+            </div>
+
+            <div *ngIf="isNewPersonnel" class="flex-col gap-1 mt-1" [formGroup]="newPersonnelForm">
+              <h3>New Authorized Personnel Details</h3>
+              <input-text label="First Name" placeholder="First Name" id="firstName"
+                          formControlName="firstName" required
+                          [formControlComp]="newPersonnelForm.controls['firstName']"
+                          [errorMessages]="{ required: 'First name is required.', onlyLetters: 'Only letters allowed.' }"
+              >
+              </input-text>
+              <input-text label="Last Name" placeholder="Last Name" id="lastName"
+                          formControlName="lastName" required
+                          [formControlComp]="newPersonnelForm.controls['lastName']"
+                          [errorMessages]="{ required: 'Last name is required.', onlyLetters: 'Only letters allowed.' }"
+              >
+              </input-text>
+              <input-text label="Date of Birth:" placeholder="Date of Birth:" id="dateOfBirth" type="date"
+                          formControlName="dateOfBirth" required
+                          [formControlComp]="newPersonnelForm.controls['dateOfBirth']"
+                          [errorMessages]="{ required: 'Birth date is required.', invalidDate: 'Must be in the past.' }"
+              >
+              </input-text>
+              <label>Gender:</label>
+              <select id="gender" formControlName="gender" required>
+                <option value="" disabled>Gender...</option>
+                <option value="M">Male</option>
+                <option value="F">Female</option>
+              </select>
+              <input-text label="Email" placeholder="Email" id="email" type="email"
+                          formControlName="email" required
+                          [formControlComp]="newPersonnelForm.controls['email']"
+                          [errorMessages]="{ required: 'Email is required.', email: 'Invalid email address.' }"
+              >
+              </input-text>
+              <input-text label="Phone Number" placeholder="Phone Number" id="phoneNumber"
+                          formControlName="phoneNumber" required
+                          [formControlComp]="newPersonnelForm.controls['phoneNumber']"
+                          [errorMessages]="{ required: 'Phone number is required.', pattern: 'Invalid phone number.' }"
+              >
+              </input-text>
+              <input-text label="Address" placeholder="Address" id="personnelAddress"
+                          formControlName="address" required
+                          [formControlComp]="newPersonnelForm.controls['address']"
+                          [errorMessages]="{ required: 'Address is required.', minlength: 'Minimum length is 5.' }"
+              >
+              </input-text>
+            </div>
+          </div>
+
+          <div class="info-card flex-col gap-1" *ngIf="isNewCompany || accountForm.get('selectedCompany')?.value">
+            <input-text id="companyName" formControlName="companyName" placeholder="Company Name"
+                        label="Company Name" [disabledInput]="!isNewCompany"
+                        [formControlComp]="accountForm.controls['companyName']"
+                        [errorMessages]="{ required: 'Company name is required.', minlength: 'Minimum length is 3.' }"
+            >
+            </input-text>
+            <input-text id="registrationNumber" formControlName="registrationNumber" placeholder="Registration Number"
+                        label="Registration Number" [disabledInput]="!isNewCompany"
+                        [formControlComp]="accountForm.controls['registrationNumber']"
+                        [errorMessages]="{ required: 'Registration number is required.', minlength: 'Minimum length is 3.' }"
+            >
+            </input-text>
+            <input-text id="taxNumber" formControlName="taxNumber" placeholder="Tax Number"
+                        label="Tax Number" [disabledInput]="!isNewCompany"
+                        [formControlComp]="accountForm.controls['taxNumber']"
+                        [errorMessages]="{ required: 'Tax number is required.', minlength: 'Minimum length is 3.' }"
+            >
+            </input-text>
+            <input-text id="activityCode" formControlName="activityCode" placeholder="Activity Code"
+                        label="Activity Code" [disabledInput]="!isNewCompany"
+                        [formControlComp]="accountForm.controls['activityCode']"
+                        [errorMessages]="{ required: 'Activity code is required.', invalidActivityCode: 'Invalid activity code. :('  }"
+            >
+            </input-text>
+            <input-text id="companyAddress" formControlName="companyAddress" placeholder="Address"
+                        label="Address" [disabledInput]="!isNewCompany"
+                        [formControlComp]="accountForm.controls['companyAddress']"
+                        [errorMessages]="{ required: 'Address is required.', minlength: 'Minimum length is 5.' }"
+            >
+            </input-text>
+            <input-text placeholder="Majority Owner:" label="Majority Owner:" id="majorityOwner"
+                        [value]="getClientName(accountForm.get('clientId')?.value)" type="text"
+                        [disabledInput]="true"> <!--za get client name: accountForm.get('clientId')?.value -->
+            </input-text>
+          </div>
+
+          <label>Currency</label>
+          <select id="currency" formControlName="currency"> <!--[disabled] = true -->
+            <option value="RSD">RSD</option>
+          </select>
+
+          <input-text id="name" formControlName="name" placeholder="Account Name:" label="Account Name:" required>
+          </input-text>
+          <input-text id="dailyLimit" formControlName="dailyLimit" type="number"
+                      placeholder="Daily Limit" label="Daily Limit" required
+                      [formControlComp]="accountForm.controls['dailyLimit']"
+                      [errorMessages]="{ pattern: 'Must be a valid number (decimal allowed).' }"
+          >
+          </input-text>
+          <input-text id="monthlyLimit" formControlName="monthlyLimit" type="number"
+                      placeholder="Monthly Limit" label="Monthly Limit" required
+                      [formControlComp]="accountForm.controls['monthlyLimit']"
+                      [errorMessages]="{ pattern: 'Must be a valid number (decimal allowed).' }"
+          >
+          </input-text>
+
+          <div class="flex justify-between" style="cursor: pointer" (click)="toggleIsActive()">
+            <label for="isActive" style="cursor: pointer" (click)="toggleIsActive()">Is Active:</label>
+            <input id="isActive" type="checkbox" formControlName="isActive"
+                   [checked]="accountForm.get('isActive')?.value === 'ACTIVE'">
+          </div>
+
+          <div class="flex justify-between" style="cursor: pointer" (click)="toggleCreateCard()">
+            <label for="createCard" style="cursor: pointer" (click)="toggleCreateCard()">Create Card:</label>
+            <input id="createCard" type="checkbox" formControlName="createCard">
+          </div>
+        </div>
+      </div>
+
+      <app-button type="submit"
+                  [disabled]="accountForm.invalid || !accountForm.get('clientId')?.value || !employeeId || !isCompanyFormValid()"
+                  class="submit-btn">Create Account
+      </app-button>
+    </div>
+  </form>
+</div>
+
+<app-modal [title]="'Create Card'" [isOpen]="showCardModal" (closeModalEvent)="showCardModal = false">
+  <div class="modal-content">
+    <br/>
+    <form [formGroup]="cardForm" (ngSubmit)="submitCardForm()" class="flex-col gap-1">
+      <div>
+        <label class="mb-05">Card Type</label>
+        <select formControlName="type" required>
+          <option value="DEBIT">DEBIT</option>
+          <option value="CREDIT">CREDIT</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="mb-05">Issuer</label>
+        <select formControlName="issuer" required>
+          <option value="VISA">VISA</option>
+          <option value="MASTER">MASTER</option>
+        </select>
+      </div>
+
+      <input-text label="Card Name" type="text" formControlName="name" required></input-text>
+      <input-text label="Card Limit" type="number" formControlName="cardLimit" required></input-text>
+
+      <app-button type="submit" [disabled]="cardForm.invalid">Create Card</app-button>
+    </form>
+  </div>
+</app-modal>
