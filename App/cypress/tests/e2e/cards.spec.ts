@@ -1,6 +1,5 @@
 describe('Cards Component', () => {
   beforeEach(function()  {
-    this.skip();
     cy.loginAsEmployee();
     cy.get(':nth-child(1) > .flex > :nth-child(1) > button').contains('List Accounts').click()
     cy.url().should('include', '/account-management');
@@ -8,6 +7,7 @@ describe('Cards Component', () => {
       .filter(':contains("View Cards")')
       .first()
       .click();
+    this.skip();
   });
 
   it('should create card', function() {
